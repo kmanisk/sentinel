@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  # Relational Database for Monitors & Time-series Metrics
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinel_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sentinel_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel} -d ${POSTGRES_DB:-sentinel_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend Health Checker & WebSocket Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: sentinel_server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel_secret}@postgres:5432/${POSTGRES_DB:-sentinel_db}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_replace_in_production_sentinel_xyz123}
+      CORS_ORIGIN: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sentinel_net
+
+  # Frontend React SPA
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: sentinel_client
+    restart: unless-stopped
+    networks:
+      - sentinel_net
+
+  # Edge Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: sentinel_nginx
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - server
+      - client
+    networks:
+      - sentinel_net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sentinel_net:
+    driver: bridge

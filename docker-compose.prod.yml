@@ -1,0 +1,99 @@
+version: "3.8"
+
+services:
+  # Relational Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinel_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sentinel_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel} -d ${POSTGRES_DB:-sentinel_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Automated Daily Database Backups (Zero-Loss Disaster Recovery)
+  db_backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    container_name: sentinel_db_backup
+    restart: always
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel_db}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secret}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sentinel_net
+
+  # Fastify Telemetry & WebSocket Server
+  server:
+    image: ghcr.io/${GITHUB_REPOSITORY:-kmanisk/sentinel}/sentinel-server:latest
+    container_name: sentinel_server
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel_secret}@postgres:5432/${POSTGRES_DB:-sentinel_db}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_replace_in_production_sentinel_xyz123}
+      CORS_ORIGIN: "https://${DOMAIN_NAME:-localhost}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sentinel_net
+
+  # React Frontend SPA
+  client:
+    image: ghcr.io/${GITHUB_REPOSITORY:-kmanisk/sentinel}/sentinel-client:latest
+    container_name: sentinel_client
+    restart: always
+    networks:
+      - sentinel_net
+
+  # Caddy Edge Reverse Proxy with Automated TLS / HTTPS (Let's Encrypt / ZeroSSL)
+  caddy:
+    image: caddy:2-alpine
+    container_name: sentinel_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 QUIC
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - server
+      - client
+    networks:
+      - sentinel_net
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  sentinel_net:
+    driver: bridge

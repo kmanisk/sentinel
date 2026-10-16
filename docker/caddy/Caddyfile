@@ -1,0 +1,28 @@
+{
+    email {$ACME_EMAIL:admin@example.com}
+    admin off
+}
+
+{$DOMAIN_NAME:localhost} {
+    encode gzip zstd
+
+    # Fastify REST API
+    handle /api/* {
+        reverse_proxy server:4000
+    }
+
+    # WebSocket Real-Time Telemetry Stream
+    handle /ws {
+        reverse_proxy server:4000
+    }
+
+    # Health Check
+    handle /health {
+        reverse_proxy server:4000
+    }
+
+    # React Frontend SPA
+    handle {
+        reverse_proxy client:80
+    }
+}

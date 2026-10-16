@@ -1,0 +1,97 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String?
+  password     String
+  role         String        @default("MEMBER")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  monitors     Monitor[]
+  alertConfigs AlertConfig[]
+
+  @@map("users")
+}
+
+model Monitor {
+  id             String        @id @default(uuid())
+  name           String
+  url            String
+  method         String        @default("GET")
+  interval       Int           @default(30) // in seconds
+  timeout        Int           @default(5000) // in milliseconds
+  expectedStatus Int           @default(200)
+  headers        String?       // JSON string
+  body           String?
+  isActive       Boolean       @default(true)
+  status         String        @default("PENDING") // UP, DOWN, DEGRADED, PENDING
+  lastLatency    Int?          // ms
+  lastCheckAt    DateTime?
+  uptime24h      Float         @default(100.0)
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  heartbeats     Heartbeat[]
+  incidents      Incident[]
+  alertConfigs   AlertConfig[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("monitors")
+}
+
+model Heartbeat {
+  id         String   @id @default(uuid())
+  monitorId  String
+  monitor    Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  status     String   // UP, DOWN, DEGRADED
+  statusCode Int?
+  latency    Int      // Total latency in ms
+  dnsTime    Int?     // DNS resolution in ms
+  tcpTime    Int?     // TCP handshake in ms
+  ttfb       Int?     // Time to First Byte in ms
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([monitorId, createdAt(sort: Desc)])
+  @@map("heartbeats")
+}
+
+model Incident {
+  id         String    @id @default(uuid())
+  monitorId  String
+  monitor    Monitor   @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  status     String    // DOWN, RESOLVED
+  error      String?
+  startedAt  DateTime  @default(now())
+  resolvedAt DateTime?
+  duration   Int?      // Duration in seconds
+
+  @@index([monitorId, startedAt(sort: Desc)])
+  @@map("incidents")
+}
+
+model AlertConfig {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monitorId   String?
+  monitor     Monitor? @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  type        String   // DISCORD, SLACK, TELEGRAM, WEBHOOK
+  destination String   // Webhook URL or Chat ID
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("alert_configs")
+}
