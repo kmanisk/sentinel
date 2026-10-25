@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: sentinel
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    autoDeployTrigger: commit
+    buildCommand: cd client && npm ci && npm run build && cd ../server && npm ci && npx prisma generate && npm run build
+    preDeployCommand: cd server && npx prisma db push
+    initialDeployHook: cd server && npx tsx prisma/seed.ts
+    startCommand: cd server && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sentinel-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: "*"
+
+databases:
+  - name: sentinel-db
+    plan: free
+    region: singapore
+    postgresMajorVersion: "16"
+    databaseName: sentinel_db
+    user: sentinel
