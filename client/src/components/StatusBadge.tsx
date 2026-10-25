@@ -8,10 +8,10 @@ interface StatusBadgeProps {
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = "md" }) => {
   const configs = {
-    UP: { text: "text-emerald-400", dot: "bg-emerald-400", label: "Operational" },
-    DEGRADED: { text: "text-amber-400", dot: "bg-amber-400", label: "Degraded" },
-    DOWN: { text: "text-rose-400", dot: "bg-rose-400", label: "Outage" },
-    PENDING: { text: "text-slate-400", dot: "bg-slate-500", label: "Pending" },
+    UP: { text: "text-[var(--signal-dark)]", dot: "bg-[var(--signal)]", label: "Operational" },
+    DEGRADED: { text: "text-[var(--warning)]", dot: "bg-[var(--warning)]", label: "Degraded" },
+    DOWN: { text: "text-[var(--danger)]", dot: "bg-[var(--danger)]", label: "Outage" },
+    PENDING: { text: "text-[var(--muted)]", dot: "bg-[var(--faint)]", label: "Pending" },
   };
 
   const config = configs[status] || configs.PENDING;
@@ -19,7 +19,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = "md" })
 
   return (
     <span className={`inline-flex items-center gap-2 font-medium ${sizeClass} ${config.text}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+      <span className={`h-2 w-2 rounded-full ${config.dot}`} />
       {config.label}
     </span>
   );

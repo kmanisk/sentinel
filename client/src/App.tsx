@@ -145,7 +145,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090b0e] text-slate-100">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <Navbar
         systemStatus={overallSystemStatus}
         isWsConnected={isWsConnected}
@@ -159,7 +159,7 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
       />
 
-      <main className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+      <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <Dashboard
           monitors={monitors}
           selectedMonitor={selectedMonitor}
@@ -171,13 +171,13 @@ export const App: React.FC = () => {
         />
       </main>
 
-      <footer className="mt-12 border-t border-[#20242b]">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-2 px-4 py-5 text-[11px] text-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <span>Sentinel · uptime and latency monitoring</span>
+      <footer className="mt-10 border-t border-[var(--line)]">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-2 px-4 py-4 text-[11px] text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <span className="font-mono">SENTINEL / API HEALTH WORKSPACE</span>
           <div className="flex items-center gap-4">
-            <a className="transition hover:text-slate-400" href="/health">Health</a>
+            <a className="underline-offset-4 hover:underline" href="/health">Health</a>
             <a
-              className="transition hover:text-slate-400"
+              className="underline-offset-4 hover:underline"
               href="https://github.com/kmanisk/sentinel"
               target="_blank"
               rel="noreferrer"

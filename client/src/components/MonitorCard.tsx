@@ -14,10 +14,10 @@ interface MonitorCardProps {
 }
 
 const latencyClass = (latency?: number | null) => {
-  if (latency === null || latency === undefined) return "text-slate-500";
-  if (latency < 300) return "text-emerald-400";
-  if (latency < 1000) return "text-amber-400";
-  return "text-rose-400";
+  if (latency === null || latency === undefined) return "text-[var(--muted)]";
+  if (latency < 300) return "text-[var(--signal-dark)]";
+  if (latency < 1000) return "text-[var(--warning)]";
+  return "text-[var(--danger)]";
 };
 
 export const MonitorCard: React.FC<MonitorCardProps> = ({
@@ -43,27 +43,33 @@ export const MonitorCard: React.FC<MonitorCardProps> = ({
 
   return (
     <article
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      data-selected={isSelected}
       onClick={() => onSelect(monitor)}
-      className={`group cursor-pointer border transition ${
-        isSelected
-          ? "border-[#555e72] bg-[#11151b]"
-          : "border-[#22262d] bg-[#0d1014] hover:border-[#343943] hover:bg-[#101319]"
-      }`}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(monitor);
+        }
+      }}
+      className="sentinel-row cursor-pointer"
     >
-      <div className="grid gap-4 px-4 py-4 lg:grid-cols-[minmax(0,1.7fr)_150px_110px_120px_120px] lg:items-center">
+      <div className="grid gap-3 px-4 py-3 lg:grid-cols-[minmax(0,1.65fr)_130px_105px_190px_95px_100px] lg:items-center">
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="rounded border border-[#303640] bg-[#171b21] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-400">
+            <span className="border border-[var(--line-strong)] bg-[var(--paper-raised)] px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-[0.08em] text-[var(--muted)]">
               {monitor.method}
             </span>
-            <h3 className="truncate text-sm font-medium text-slate-100">{monitor.name}</h3>
+            <h3 className="truncate text-sm font-semibold tracking-[-0.01em]">{monitor.name}</h3>
           </div>
           <a
             href={monitor.url}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="mt-1 inline-flex max-w-full items-center gap-1 text-[11px] text-slate-500 transition hover:text-slate-300"
+            className="mt-1 inline-flex max-w-full items-center gap-1 text-[10px] text-[var(--muted)] underline-offset-4 hover:text-[var(--ink)] hover:underline"
           >
             <span className="truncate font-mono">{monitor.url}</span>
             <ExternalLink className="h-3 w-3 shrink-0" />
@@ -75,53 +81,48 @@ export const MonitorCard: React.FC<MonitorCardProps> = ({
         </div>
 
         <div>
-          <div className="text-[10px] uppercase tracking-[0.12em] text-slate-600 lg:hidden">Latency</div>
-          <div className={`font-mono text-sm font-medium ${latencyClass(monitor.lastLatency)}`}>
+          <div className="sentinel-eyebrow mb-1 lg:hidden">Latency</div>
+          <div className={`font-mono text-xs font-semibold ${latencyClass(monitor.lastLatency)}`}>
             {monitor.lastLatency !== null && monitor.lastLatency !== undefined
               ? `${monitor.lastLatency} ms`
               : "—"}
           </div>
         </div>
 
-        <div className="min-w-0">
-          <div className="mb-1 flex items-center justify-between text-[10px] text-slate-600">
-            <span>24h</span>
-            <span className="font-mono text-slate-400">{monitor.uptime24h.toFixed(2)}%</span>
-          </div>
-          <UptimeBar heartbeats={monitor.heartbeats} uptimePercentage={monitor.uptime24h} />
+        <UptimeBar heartbeats={monitor.heartbeats} uptimePercentage={monitor.uptime24h} />
+
+        <div className="font-mono text-[10px] text-[var(--muted)]">
+          {monitor.lastCheckAt
+            ? new Date(monitor.lastCheckAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "Not yet"}
         </div>
 
-        <div className="flex items-center justify-between gap-3 lg:justify-end">
-          <span className="text-[10px] text-slate-600 lg:hidden">
-            {monitor.lastCheckAt
-              ? new Date(monitor.lastCheckAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-              : "Not checked"}
-          </span>
-
-          <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={handleTestNow}
-              disabled={isTesting}
-              title="Run check now"
-              className="p-2 text-slate-500 transition hover:bg-[#191d24] hover:text-slate-100 disabled:opacity-40"
-            >
-              <Play className={`h-3.5 w-3.5 ${isTesting ? "animate-pulse" : ""}`} />
-            </button>
-            <button
-              onClick={() => onEdit(monitor)}
-              title="Edit monitor"
-              className="p-2 text-slate-500 transition hover:bg-[#191d24] hover:text-slate-100"
-            >
-              <Edit2 className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => onDelete(monitor.id)}
-              title="Delete monitor"
-              className="p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-400"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
+        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={handleTestNow}
+            disabled={isTesting}
+            title="Run check now"
+            className="sentinel-icon-key"
+            aria-label={`Run ${monitor.name} check now`}
+          >
+            <Play className={`h-3.5 w-3.5 ${isTesting ? "animate-pulse" : ""}`} />
+          </button>
+          <button
+            onClick={() => onEdit(monitor)}
+            title="Edit monitor"
+            className="sentinel-icon-key"
+            aria-label={`Edit ${monitor.name}`}
+          >
+            <Edit2 className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(monitor.id)}
+            title="Delete monitor"
+            className="sentinel-icon-key hover:!border-[var(--danger)] hover:!bg-[var(--danger-soft)] hover:!text-[var(--danger)]"
+            aria-label={`Delete ${monitor.name}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </article>

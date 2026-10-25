@@ -9,8 +9,7 @@ interface MonitorModalProps {
   monitorToEdit?: Monitor | null;
 }
 
-const inputClass =
-  "w-full rounded-md border border-[#2b3038] bg-[#0b0e12] px-3 py-2.5 text-sm text-slate-200 outline-none transition placeholder:text-slate-700 focus:border-[#6972a8]";
+const inputClass = "sentinel-field px-3 py-2.5 text-sm";
 
 export const MonitorModal: React.FC<MonitorModalProps> = ({
   isOpen,
@@ -90,37 +89,33 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-[2px]">
-      <div className="w-full max-w-2xl border border-[#2a2f37] bg-[#101318] shadow-2xl">
-        <div className="flex items-start justify-between border-b border-[#242830] px-5 py-4">
+    <div className="sentinel-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[#171714]/35 p-4 backdrop-blur-[2px]">
+      <div className="sentinel-modal-sheet w-full max-w-2xl border border-[var(--ink)] bg-[var(--paper-raised)] shadow-[0_8px_0_rgba(23,23,20,0.14)]">
+        <div className="flex items-start justify-between border-b border-[var(--ink)] px-5 py-4">
           <div>
-            <h2 className="text-base font-medium text-slate-100">
-              {monitorToEdit ? "Edit monitor" : "Create monitor"}
+            <p className="sentinel-eyebrow">Monitor configuration</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
+              {monitorToEdit ? "Edit endpoint" : "Create endpoint"}
             </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Define the endpoint and how Sentinel should evaluate it.
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              Define the request and the response Sentinel should consider healthy.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-slate-600 transition hover:bg-[#181c22] hover:text-slate-300"
-            aria-label="Close"
-          >
+          <button type="button" onClick={onClose} className="sentinel-icon-key" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 p-5">
           {error && (
-            <div className="border border-rose-500/25 bg-rose-500/5 px-3 py-2 text-xs text-rose-400">
+            <div className="border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-2 text-xs text-[var(--danger)]">
               {error}
             </div>
           )}
 
           <div className="grid gap-4 sm:grid-cols-[150px_minmax(0,1fr)]">
             <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-500">Method</span>
+              <span className="mb-1.5 block text-xs font-medium">Method</span>
               <select value={method} onChange={(e) => setMethod(e.target.value)} className={inputClass}>
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>
@@ -131,7 +126,7 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-500">Endpoint URL</span>
+              <span className="mb-1.5 block text-xs font-medium">Endpoint URL</span>
               <input
                 type="url"
                 required
@@ -144,7 +139,7 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-xs text-slate-500">Display name</span>
+            <span className="mb-1.5 block text-xs font-medium">Display name</span>
             <input
               type="text"
               required
@@ -157,7 +152,7 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
 
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-500">Check every</span>
+              <span className="mb-1.5 block text-xs font-medium">Check every</span>
               <div className="relative">
                 <input
                   type="number"
@@ -167,12 +162,12 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
                   onChange={(e) => setInterval(Number(e.target.value))}
                   className={`${inputClass} pr-10 font-mono`}
                 />
-                <span className="pointer-events-none absolute right-3 top-2.5 text-xs text-slate-700">sec</span>
+                <span className="pointer-events-none absolute right-3 top-2.5 text-xs text-[var(--muted)]">sec</span>
               </div>
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-500">Timeout</span>
+              <span className="mb-1.5 block text-xs font-medium">Timeout</span>
               <div className="relative">
                 <input
                   type="number"
@@ -183,12 +178,12 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
                   onChange={(e) => setTimeoutVal(Number(e.target.value))}
                   className={`${inputClass} pr-10 font-mono`}
                 />
-                <span className="pointer-events-none absolute right-3 top-2.5 text-xs text-slate-700">ms</span>
+                <span className="pointer-events-none absolute right-3 top-2.5 text-xs text-[var(--muted)]">ms</span>
               </div>
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-xs text-slate-500">Expected status</span>
+              <span className="mb-1.5 block text-xs font-medium">Expected status</span>
               <input
                 type="number"
                 min="100"
@@ -200,10 +195,10 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
             </label>
           </div>
 
-          <details className="group border-t border-[#242830] pt-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-xs text-slate-500 transition hover:text-slate-300">
+          <details className="group border-t border-[var(--line)] pt-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)]">
               Request headers
-              <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
+              <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <div className="pt-3">
               <textarea
@@ -213,22 +208,18 @@ export const MonitorModal: React.FC<MonitorModalProps> = ({
                 placeholder='{"Authorization":"Bearer token"}'
                 className={`${inputClass} resize-y font-mono text-xs`}
               />
-              <p className="mt-1.5 text-[10px] text-slate-700">Optional JSON object sent with each check.</p>
+              <p className="mt-1.5 text-[10px] text-[var(--muted)]">Optional JSON object sent with each check.</p>
             </div>
           </details>
 
-          <div className="flex items-center justify-end gap-2 border-t border-[#242830] pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-9 rounded-md px-3 text-xs text-slate-500 transition hover:bg-[#171a20] hover:text-slate-200"
-            >
+          <div className="flex items-center justify-end gap-2 border-t border-[var(--line)] pt-4">
+            <button type="button" onClick={onClose} className="sentinel-key h-9 px-3 text-xs font-semibold">
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-9 rounded-md bg-[#e9ebf1] px-4 text-xs font-medium text-[#111318] transition hover:bg-white disabled:opacity-50"
+              className="sentinel-key sentinel-key-primary h-9 px-4 text-xs font-semibold"
             >
               {isSubmitting ? "Saving…" : monitorToEdit ? "Save changes" : "Create monitor"}
             </button>

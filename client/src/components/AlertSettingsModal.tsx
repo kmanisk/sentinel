@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, Bell, Trash2, Send, CheckCircle2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Bell, CheckCircle2, Send, Trash2, X } from "lucide-react";
 import { AlertConfig } from "../types";
 import { ApiClient } from "../services/api";
 
@@ -72,120 +72,106 @@ export const AlertSettingsModal: React.FC<AlertSettingsModalProps> = ({ isOpen, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-xl bg-[#111827] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-indigo-400">
-            <Bell className="w-5 h-5" />
-            <h3 className="font-semibold text-slate-100 text-lg">Alerting & Notification Channels</h3>
+    <div className="sentinel-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-[#171714]/35 p-4 backdrop-blur-[2px]">
+      <div className="sentinel-modal-sheet w-full max-w-xl border border-[var(--ink)] bg-[var(--paper-raised)] shadow-[0_8px_0_rgba(23,23,20,0.14)]">
+        <div className="flex items-start justify-between border-b border-[var(--ink)] px-5 py-4">
+          <div>
+            <p className="sentinel-eyebrow">Notifications</p>
+            <div className="mt-1 flex items-center gap-2">
+              <Bell className="h-4 w-4 text-[var(--signal-dark)]" />
+              <h2 className="text-xl font-semibold tracking-[-0.03em]">Alert channels</h2>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
+          <button type="button" onClick={onClose} className="sentinel-icon-key" aria-label="Close">
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="space-y-5 p-5">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+            <div className="border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-2 text-xs text-[var(--danger)]">
               {error}
             </div>
           )}
 
-          {/* New Channel Form */}
-          <form onSubmit={handleAddAlert} className="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-            <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              Add New Notification Channel
-            </h4>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="DISCORD">Discord Webhook</option>
-                  <option value="SLACK">Slack Webhook</option>
-                  <option value="TELEGRAM">Telegram Bot</option>
-                  <option value="WEBHOOK">Custom HTTP Webhook</option>
-                </select>
-              </div>
-
-              <div className="col-span-2">
-                <input
-                  type="text"
-                  required
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder={
-                    type === "TELEGRAM"
-                      ? "BOT_TOKEN:CHAT_ID"
-                      : "https://discord.com/api/webhooks/..."
-                  }
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-indigo-500 placeholder:text-slate-600"
-                />
-              </div>
+          <form onSubmit={handleAddAlert} className="space-y-3 border-b border-[var(--line)] pb-5">
+            <div>
+              <p className="sentinel-eyebrow">Connect a channel</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">Send incident transitions to an external destination.</p>
             </div>
 
-            <button
-              type="submit"
-              className="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-md transition-colors"
-            >
-              Connect Notification Channel
+            <div className="grid gap-2 sm:grid-cols-[170px_minmax(0,1fr)]">
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as "DISCORD" | "SLACK" | "TELEGRAM" | "WEBHOOK")}
+                className="sentinel-field px-3 py-2 text-sm"
+              >
+                <option value="DISCORD">Discord webhook</option>
+                <option value="SLACK">Slack webhook</option>
+                <option value="TELEGRAM">Telegram bot</option>
+                <option value="WEBHOOK">HTTP webhook</option>
+              </select>
+
+              <input
+                type="text"
+                required
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                placeholder={type === "TELEGRAM" ? "BOT_TOKEN:CHAT_ID" : "https://..."}
+                className="sentinel-field px-3 py-2 font-mono text-xs"
+              />
+            </div>
+
+            <button type="submit" className="sentinel-key sentinel-key-primary h-9 px-4 text-xs font-semibold">
+              Connect channel
             </button>
           </form>
 
-          {/* Configured Channels List */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Active Alert Channels ({alerts.length})
-            </h4>
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="sentinel-eyebrow">Configured / {alerts.length}</p>
+            </div>
 
             {isLoading ? (
-              <p className="text-xs text-slate-500 py-3 text-center">Loading channels...</p>
+              <p className="py-4 text-xs text-[var(--muted)]">Loading channels…</p>
             ) : alerts.length === 0 ? (
-              <p className="text-xs text-slate-500 py-4 text-center border border-dashed border-slate-800 rounded-xl">
-                No notification channels configured yet. Add a Discord or Slack webhook above!
-              </p>
+              <div className="border border-dashed border-[var(--line-strong)] px-4 py-6 text-center text-xs text-[var(--muted)]">
+                No notification channels configured.
+              </div>
             ) : (
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div className="max-h-64 overflow-y-auto border-y border-[var(--line)]">
                 {alerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs"
-                  >
-                    <div className="space-y-0.5 min-w-0 flex-1 pr-2">
+                  <div key={alert.id} className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-[var(--line)] px-3 py-3 last:border-b-0">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-200 font-mono px-1.5 py-0.5 rounded bg-slate-800 text-[11px]">
+                        <span className="border border-[var(--line-strong)] px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-[0.08em]">
                           {alert.type}
                         </span>
                         {testResult?.id === alert.id && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
-                            <CheckCircle2 className="w-3 h-3" /> Sent!
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--signal-dark)]">
+                            <CheckCircle2 className="h-3 w-3" /> Sent
                           </span>
                         )}
                       </div>
-                      <p className="font-mono text-slate-500 truncate text-[11px]">{alert.destination}</p>
+                      <p className="mt-1 truncate font-mono text-[10px] text-[var(--muted)]">{alert.destination}</p>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleTest(alert.id)}
-                        title="Send Test Notification"
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-300 hover:text-indigo-300 transition-colors"
+                        title="Send test notification"
+                        className="sentinel-icon-key"
+                        aria-label={`Test ${alert.type} alert`}
                       >
-                        <Send className="w-3.5 h-3.5" />
+                        <Send className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(alert.id)}
-                        title="Remove Channel"
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
+                        title="Remove channel"
+                        className="sentinel-icon-key hover:!border-[var(--danger)] hover:!bg-[var(--danger-soft)] hover:!text-[var(--danger)]"
+                        aria-label={`Remove ${alert.type} alert`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>

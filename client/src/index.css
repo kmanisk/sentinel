@@ -3,9 +3,32 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-synthesis: none;
-  background: #090b0e;
+
+  --paper: #f5f2ea;
+  --paper-raised: #fbfaf6;
+  --paper-muted: #eee9dd;
+  --ink: #171714;
+  --ink-soft: #383832;
+  --muted: #6f6d65;
+  --faint: #a29e93;
+  --line: #d8d2c5;
+  --line-strong: #b7b0a2;
+  --grid-line: #e2ddd2;
+
+  --signal: #1b8773;
+  --signal-dark: #0c5f50;
+  --signal-soft: #e4f1ed;
+
+  --warning: #a6671d;
+  --warning-soft: #f6ecd9;
+  --danger: #b43d34;
+  --danger-soft: #f7e6e3;
+
+  --focus: #1f5f8c;
+  --key-shadow: 0 2px 0 var(--ink);
+  --key-shadow-signal: 0 2px 0 var(--signal-dark);
 }
 
 * {
@@ -13,17 +36,15 @@
 }
 
 html {
-  background: #090b0e;
+  background: var(--paper);
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background:
-    radial-gradient(circle at 50% -20%, rgba(115, 124, 255, 0.08), transparent 36rem),
-    #090b0e;
-  color: #e7e9ee;
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Inter Tight", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -42,12 +63,13 @@ button {
 code,
 pre,
 .font-mono {
-  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 ::selection {
-  background: rgba(126, 136, 255, 0.24);
-  color: #fff;
+  background: #cfe8e1;
+  color: var(--ink);
 }
 
 ::-webkit-scrollbar {
@@ -56,44 +78,249 @@ pre,
 }
 
 ::-webkit-scrollbar-track {
-  background: #090b0e;
+  background: var(--paper);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2a2e37;
-  border: 2px solid #090b0e;
+  background: #c2bbae;
+  border: 2px solid var(--paper);
   border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3f4a;
+  background: #a8a194;
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(2px); }
-  to { opacity: 1; transform: translateY(0); }
+.sentinel-sheet {
+  border: 1px solid var(--line);
+  background: var(--paper-raised);
 }
 
-.animate-fade-in {
-  animation: fade-in 160ms ease-out;
+.sentinel-rule {
+  border-color: var(--line);
 }
 
-@keyframes live-pulse {
+.sentinel-eyebrow {
+  font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sentinel-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--ink);
+  border-radius: 5px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  box-shadow: var(--key-shadow);
+  transition:
+    transform 90ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 90ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    color 160ms ease-out;
+}
+
+.sentinel-key:hover:not(:disabled) {
+  background: #fffef9;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 var(--ink);
+}
+
+.sentinel-key:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.sentinel-key:focus-visible,
+.sentinel-icon-key:focus-visible,
+.sentinel-field:focus-visible,
+.sentinel-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.sentinel-key:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sentinel-key-primary {
+  border-color: var(--signal-dark);
+  background: var(--signal);
+  color: #ffffff;
+  box-shadow: var(--key-shadow-signal);
+}
+
+.sentinel-key-primary:hover:not(:disabled) {
+  background: #168f78;
+  box-shadow: 0 3px 0 var(--signal-dark);
+}
+
+.sentinel-icon-key {
+  display: inline-flex;
+  min-width: 32px;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--muted);
+  transition:
+    color 160ms ease-out,
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    transform 90ms ease-out;
+}
+
+.sentinel-icon-key:hover {
+  border-color: var(--line-strong);
+  background: var(--paper-muted);
+  color: var(--ink);
+}
+
+.sentinel-icon-key:active {
+  transform: translateY(1px);
+}
+
+.sentinel-field {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: #fffef9;
+  color: var(--ink);
+  outline: none;
+  transition:
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.sentinel-field::placeholder {
+  color: var(--faint);
+}
+
+.sentinel-field:focus {
+  border-color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+  background: #ffffff;
+}
+
+.sentinel-row {
+  position: relative;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  transition:
+    background-color 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.sentinel-row:hover {
+  background: #fbf8ef;
+}
+
+.sentinel-row[data-selected="true"] {
+  background: var(--signal-soft);
+}
+
+.sentinel-row[data-selected="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -1px;
+  width: 3px;
+  background: var(--signal);
+  animation: selection-rail 190ms ease-out both;
+}
+
+.sentinel-modal-backdrop {
+  animation: backdrop-in 180ms ease-out both;
+}
+
+.sentinel-modal-sheet {
+  transform-origin: 50% 42%;
+  animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.sentinel-live-dot {
+  animation: live-breathe 2.4s ease-in-out infinite;
+}
+
+.chart-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 48px;
+  background-position: 0 0;
+}
+
+.section-reveal {
+  animation: section-reveal 340ms ease-out both;
+}
+
+.section-reveal-delay {
+  animation-delay: 70ms;
+}
+
+.section-reveal-delay-2 {
+  animation-delay: 130ms;
+}
+
+@keyframes section-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes selection-rail {
+  from {
+    transform: scaleY(0.25);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes live-breathe {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.42; }
+  50% { opacity: 0.38; }
 }
 
-.animate-live-pulse {
-  animation: live-pulse 1.8s ease-in-out infinite;
-}
-
-/* Keep legacy modal surfaces from drifting back toward oversized AI-style cards. */
-.rounded-2xl {
-  border-radius: 10px !important;
-}
-
-.shadow-lg,
-.shadow-xl,
-.shadow-2xl {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32) !important;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }

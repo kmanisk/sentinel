@@ -7,7 +7,6 @@ interface UptimeBarProps {
 }
 
 export const UptimeBar: React.FC<UptimeBarProps> = ({ heartbeats = [], uptimePercentage }) => {
-  // Pad with placeholders if fewer than 20 checks available
   const totalSlots = 24;
   const recent = [...heartbeats].slice(0, totalSlots).reverse();
   const placeholdersCount = Math.max(0, totalSlots - recent.length);
@@ -17,39 +16,37 @@ export const UptimeBar: React.FC<UptimeBarProps> = ({ heartbeats = [], uptimePer
   ];
 
   return (
-    <div className="w-full space-y-1.5">
-      <div className="flex items-center justify-between text-xs text-slate-400">
-        <span className="font-mono">24h History</span>
-        <span className="font-mono font-medium text-emerald-400">{uptimePercentage.toFixed(1)}% uptime</span>
-      </div>
-
-      <div className="flex items-center gap-1 h-6 w-full bg-slate-900/50 p-1 rounded-md border border-slate-800/80">
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="flex h-5 min-w-0 flex-1 items-end gap-[2px]" aria-label={`${uptimePercentage.toFixed(1)}% uptime`}>
         {slots.map((hb, idx) => {
-          let bg = "bg-slate-800";
+          let bg = "bg-[var(--line)]";
           let title = "No data recorded";
 
           if (hb) {
             if (hb.status === "UP") {
-              bg = "bg-emerald-500 hover:bg-emerald-400";
+              bg = "bg-[var(--signal)]";
               title = `UP: ${hb.latency}ms (${new Date(hb.createdAt).toLocaleTimeString()})`;
             } else if (hb.status === "DEGRADED") {
-              bg = "bg-amber-500 hover:bg-amber-400";
+              bg = "bg-[var(--warning)]";
               title = `DEGRADED: ${hb.latency}ms (${new Date(hb.createdAt).toLocaleTimeString()})`;
             } else if (hb.status === "DOWN") {
-              bg = "bg-rose-500 hover:bg-rose-400";
+              bg = "bg-[var(--danger)]";
               title = `DOWN: ${hb.error || "Failure"} (${new Date(hb.createdAt).toLocaleTimeString()})`;
             }
           }
 
           return (
-            <div
+            <span
               key={idx}
               title={title}
-              className={`flex-1 h-full rounded-sm transition-all duration-150 cursor-pointer ${bg}`}
+              className={`h-full min-w-[2px] flex-1 ${bg} transition-[height,opacity] duration-150 hover:h-[22px] hover:opacity-80`}
             />
           );
         })}
       </div>
+      <span className="shrink-0 font-mono text-[10px] text-[var(--muted)]">
+        {uptimePercentage.toFixed(1)}%
+      </span>
     </div>
   );
 };
