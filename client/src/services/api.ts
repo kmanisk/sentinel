@@ -2,6 +2,8 @@ import { AlertConfig, Heartbeat, Monitor, User } from "../types";
 
 const API_BASE = "/api";
 
+export type OAuthProvider = "google" | "github";
+
 export class ApiClient {
   private static getToken(): string | null {
     return localStorage.getItem("sentinel_token");
@@ -23,7 +25,7 @@ export class ApiClient {
     };
 
     if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -37,7 +39,7 @@ export class ApiClient {
         const data = await response.json();
         if (data.error) errorMessage = data.error;
       } catch {
-        // Fallback to generic message
+        // Keep the HTTP fallback message.
       }
       throw new Error(errorMessage);
     }
@@ -45,7 +47,6 @@ export class ApiClient {
     return response.json();
   }
 
-  // Auth
   public static async login(credentials: { email: string; password: string }): Promise<{ user: User; token: string }> {
     const res = await this.request<{ user: User; token: string }>("/auth/login", {
       method: "POST",
@@ -64,6 +65,14 @@ export class ApiClient {
     return res;
   }
 
+  public static async getAuthProviders(): Promise<{ providers: Record<OAuthProvider, boolean> }> {
+    return this.request<{ providers: Record<OAuthProvider, boolean> }>("/auth/providers");
+  }
+
+  public static startOAuth(provider: OAuthProvider): void {
+    window.location.assign(`${API_BASE}/auth/oauth/${provider}`);
+  }
+
   public static async getMe(): Promise<{ user: User }> {
     return this.request<{ user: User }>("/auth/me");
   }
@@ -72,7 +81,6 @@ export class ApiClient {
     this.setToken(null);
   }
 
-  // Monitors
   public static async getMonitors(): Promise<{ monitors: Monitor[] }> {
     return this.request<{ monitors: Monitor[] }>("/monitors");
   }
@@ -111,7 +119,6 @@ export class ApiClient {
     return this.request<{ metrics: Heartbeat[] }>(`/monitors/${id}/metrics?limit=${limit}`);
   }
 
-  // Alerts
   public static async getAlerts(): Promise<{ alerts: AlertConfig[] }> {
     return this.request<{ alerts: AlertConfig[] }>("/alerts");
   }

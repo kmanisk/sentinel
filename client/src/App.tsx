@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Monitor, User } from "./types";
 import { ApiClient } from "./services/api";
 import { TelemetrySocket } from "./services/websocket";
@@ -19,65 +19,73 @@ export const App: React.FC = () => {
   const [isWsConnected, setIsWsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Fetch monitors list
   const loadMonitors = useCallback(async () => {
     try {
       setIsRefreshing(true);
       const res = await ApiClient.getMonitors();
       setMonitors(res.monitors);
-      if (res.monitors.length > 0 && !selectedMonitor) {
-        setSelectedMonitor(res.monitors[0]);
-      }
+      setSelectedMonitor((current) => {
+        if (!res.monitors.length) return null;
+        if (!current) return res.monitors[0];
+        return res.monitors.find((monitor) => monitor.id === current.id) || res.monitors[0];
+      });
     } catch (err) {
       console.error("Failed to load monitors:", err);
     } finally {
       setIsRefreshing(false);
     }
-  }, [selectedMonitor]);
+  }, []);
 
-  // Check current session
   useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const oauthToken = hash.get("auth_token");
+    const oauthError = hash.get("auth_error");
+
+    if (oauthToken) {
+      ApiClient.setToken(oauthToken);
+    }
+
+    if (oauthToken || oauthError) {
+      window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
+    }
+
+    if (oauthError) {
+      setIsAuthModalOpen(true);
+    }
+
     ApiClient.getMe()
       .then((res) => setCurrentUser(res.user))
       .catch(() => setCurrentUser(null));
   }, []);
 
-  // Connect WebSocket & bind event listeners
   useEffect(() => {
     const ws = TelemetrySocket.getInstance();
     ws.connect();
 
-    const unsubConn = ws.onConnectionChange((connected) => {
-      setIsWsConnected(connected);
-    });
+    const unsubConn = ws.onConnectionChange(setIsWsConnected);
 
     const unsubHeartbeat = ws.onHeartbeat(({ monitor, heartbeat }) => {
       setMonitors((prev) =>
         prev.map((m) => {
-          if (m.id === monitor.id) {
-            const existingHbs = m.heartbeats || [];
-            return {
-              ...monitor,
-              heartbeats: [heartbeat, ...existingHbs.slice(0, 23)],
-            };
-          }
-          return m;
+          if (m.id !== monitor.id) return m;
+          const existingHbs = m.heartbeats || [];
+          return {
+            ...monitor,
+            heartbeats: [heartbeat, ...existingHbs.slice(0, 23)],
+          };
         })
       );
 
-      // Also update selected monitor in real-time if it's the active one
       setSelectedMonitor((cur) => (cur?.id === monitor.id ? { ...cur, ...monitor } : cur));
     });
 
     const unsubUpdate = ws.onMonitorUpdated(({ monitor }) => {
       setMonitors((prev) => {
         const idx = prev.findIndex((m) => m.id === monitor.id);
-        if (idx >= 0) {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], ...monitor };
-          return updated;
-        }
-        return [monitor, ...prev];
+        if (idx < 0) return [monitor, ...prev];
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], ...monitor };
+        return updated;
       });
     });
 
@@ -96,34 +104,34 @@ export const App: React.FC = () => {
     };
   }, [loadMonitors]);
 
-  // Overall system health calculation
   const overallSystemStatus: "UP" | "DEGRADED" | "DOWN" = monitors.some((m) => m.status === "DOWN")
     ? "DOWN"
     : monitors.some((m) => m.status === "DEGRADED")
     ? "DEGRADED"
     : "UP";
 
-  // CRUD Handlers
   const handleSaveMonitor = async (data: Partial<Monitor>) => {
     if (monitorToEdit) {
       const res = await ApiClient.updateMonitor(monitorToEdit.id, data);
       setMonitors((prev) => prev.map((m) => (m.id === res.monitor.id ? res.monitor : m)));
+      setSelectedMonitor((current) => (current?.id === res.monitor.id ? res.monitor : current));
     } else {
       const res = await ApiClient.createMonitor(data);
       setMonitors((prev) => [res.monitor, ...prev]);
-      if (!selectedMonitor) setSelectedMonitor(res.monitor);
+      setSelectedMonitor((current) => current || res.monitor);
     }
     setMonitorToEdit(null);
   };
 
   const handleDeleteMonitor = async (id: string) => {
-    if (confirm("Are you sure you want to delete this monitor?")) {
-      await ApiClient.deleteMonitor(id);
-      setMonitors((prev) => prev.filter((m) => m.id !== id));
-      if (selectedMonitor?.id === id) {
-        setSelectedMonitor(monitors.find((m) => m.id !== id) || null);
-      }
-    }
+    if (!confirm("Delete this monitor and its recorded telemetry?")) return;
+
+    await ApiClient.deleteMonitor(id);
+    setMonitors((prev) => {
+      const next = prev.filter((m) => m.id !== id);
+      setSelectedMonitor((current) => (current?.id === id ? next[0] || null : current));
+      return next;
+    });
   };
 
   const handleEditClick = (monitor: Monitor) => {
@@ -137,7 +145,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B0F17] text-slate-100 font-sans selection:bg-indigo-500/20">
+    <div className="min-h-screen bg-[#090b0e] text-slate-100">
       <Navbar
         systemStatus={overallSystemStatus}
         isWsConnected={isWsConnected}
@@ -151,11 +159,11 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
         <Dashboard
           monitors={monitors}
           selectedMonitor={selectedMonitor}
-          onSelectMonitor={(m) => setSelectedMonitor(m)}
+          onSelectMonitor={setSelectedMonitor}
           onEditMonitor={handleEditClick}
           onDeleteMonitor={handleDeleteMonitor}
           onRefresh={loadMonitors}
@@ -163,28 +171,23 @@ export const App: React.FC = () => {
         />
       </main>
 
-      {/* Modern Developer Footer */}
-      <footer className="border-t border-slate-800/80 bg-[#0B0F17] py-6 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-mono font-semibold text-slate-400">SENTINEL</span>
-            <span>— Production-grade API Health & Latency Telemetry Engine</span>
-          </div>
-          <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
-            <span>Fastify</span>
-            <span>•</span>
-            <span>React 18</span>
-            <span>•</span>
-            <span>WebSockets</span>
-            <span>•</span>
-            <span>Prisma</span>
-            <span>•</span>
-            <span>Docker</span>
+      <footer className="mt-12 border-t border-[#20242b]">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-2 px-4 py-5 text-[11px] text-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <span>Sentinel · uptime and latency monitoring</span>
+          <div className="flex items-center gap-4">
+            <a className="transition hover:text-slate-400" href="/health">Health</a>
+            <a
+              className="transition hover:text-slate-400"
+              href="https://github.com/kmanisk/sentinel"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source
+            </a>
           </div>
         </div>
       </footer>
 
-      {/* Modals */}
       <MonitorModal
         isOpen={isAddModalOpen}
         onClose={() => {

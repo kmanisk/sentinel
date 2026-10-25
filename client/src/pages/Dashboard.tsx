@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Server, Activity, Percent, AlertTriangle, RefreshCw } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import { Heartbeat, Monitor } from "../types";
 import { MonitorCard } from "../components/MonitorCard";
 import { LatencyChart } from "../components/LatencyChart";
@@ -26,124 +26,104 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [metricsData, setMetricsData] = useState<Heartbeat[]>([]);
 
-  // Calculate high-level KPIs
   const totalMonitors = monitors.length;
-  const activeOutages = monitors.filter((m) => m.status === "DOWN").length;
+  const downCount = monitors.filter((m) => m.status === "DOWN").length;
+  const degradedCount = monitors.filter((m) => m.status === "DEGRADED").length;
 
   const validLatencies = monitors
     .map((m) => m.lastLatency)
-    .filter((l): l is number => typeof l === "number" && l > 0);
+    .filter((l): l is number => typeof l === "number" && l >= 0);
 
-  const avgGlobalLatency =
-    validLatencies.length > 0
-      ? Math.round(validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length)
-      : 0;
+  const avgGlobalLatency = validLatencies.length
+    ? Math.round(validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length)
+    : 0;
 
-  const avgUptime =
-    monitors.length > 0
-      ? (monitors.reduce((sum, m) => sum + m.uptime24h, 0) / monitors.length).toFixed(1)
-      : "100.0";
+  const avgUptime = monitors.length
+    ? monitors.reduce((sum, m) => sum + m.uptime24h, 0) / monitors.length
+    : 100;
 
-  // Fetch full metrics for the selected monitor
   useEffect(() => {
-    if (selectedMonitor) {
-      ApiClient.getMetrics(selectedMonitor.id, 60)
-        .then((res) => setMetricsData(res.metrics))
-        .catch((err) => console.error("Error fetching metrics:", err));
+    if (!selectedMonitor) {
+      setMetricsData([]);
+      return;
     }
+
+    ApiClient.getMetrics(selectedMonitor.id, 60)
+      .then((res) => setMetricsData(res.metrics))
+      .catch((err) => console.error("Error fetching metrics:", err));
   }, [selectedMonitor?.id, selectedMonitor?.lastCheckAt]);
 
   return (
-    <div className="space-y-8">
-      {/* KPI Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Monitored Services */}
-        <div className="p-5 rounded-2xl bg-[#111827]/80 border border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium uppercase tracking-wider">Services</span>
-            <Server className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-bold font-mono text-slate-100">{totalMonitors}</div>
-          <div className="text-[11px] text-slate-500">Active health check targets</div>
+    <div className="space-y-7">
+      <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-600">Monitoring workspace</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-slate-100">Overview</h1>
+          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+            Health, response time and incidents across {totalMonitors || "your"} monitored endpoints.
+          </p>
         </div>
-
-        {/* Global Latency */}
-        <div className="p-5 rounded-2xl bg-[#111827]/80 border border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium uppercase tracking-wider">Avg Latency</span>
-            <Activity className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-bold font-mono text-slate-100 flex items-baseline gap-1">
-            <span>{avgGlobalLatency}</span>
-            <span className="text-xs font-normal text-slate-400">ms</span>
-          </div>
-          <div className="text-[11px] text-slate-500">Across operational nodes</div>
+        <div className="text-xs text-slate-500">
+          {downCount > 0
+            ? `${downCount} endpoint${downCount === 1 ? "" : "s"} down`
+            : degradedCount > 0
+            ? `${degradedCount} endpoint${degradedCount === 1 ? "" : "s"} degraded`
+            : "No active incidents"}
         </div>
+      </section>
 
-        {/* Uptime % */}
-        <div className="p-5 rounded-2xl bg-[#111827]/80 border border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium uppercase tracking-wider">24h Uptime</span>
-            <Percent className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-bold font-mono text-emerald-400">{avgUptime}%</div>
-          <div className="text-[11px] text-slate-500">Rolling SLA availability</div>
-        </div>
-
-        {/* Active Outages */}
-        <div className="p-5 rounded-2xl bg-[#111827]/80 border border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium uppercase tracking-wider">Active Incidents</span>
-            <AlertTriangle className={`w-4 h-4 ${activeOutages > 0 ? "text-rose-400" : "text-slate-500"}`} />
-          </div>
+      <section className="grid border-y border-[#242830] bg-[#0d1014] sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["Monitors", String(totalMonitors), "configured endpoints"],
+          ["Avg latency", `${avgGlobalLatency} ms`, "latest checks"],
+          ["24h uptime", `${avgUptime.toFixed(2)}%`, "average availability"],
+          ["Incidents", String(downCount), downCount ? "requires attention" : "currently open"],
+        ].map(([label, value, detail], index) => (
           <div
-            className={`text-2xl font-bold font-mono ${
-              activeOutages > 0 ? "text-rose-400" : "text-slate-100"
+            key={label}
+            className={`px-4 py-4 ${index > 0 ? "border-t border-[#242830] sm:border-l sm:border-t-0" : ""} ${
+              index === 2 ? "sm:border-t lg:border-t-0" : ""
             }`}
           >
-            {activeOutages}
+            <div className="text-[10px] uppercase tracking-[0.14em] text-slate-600">{label}</div>
+            <div className="mt-2 font-mono text-xl font-medium tracking-[-0.03em] text-slate-100">{value}</div>
+            <div className="mt-1 text-[11px] text-slate-600">{detail}</div>
           </div>
-          <div className="text-[11px] text-slate-500">
-            {activeOutages === 0 ? "Zero outages recorded" : "Action required"}
-          </div>
-        </div>
-      </div>
+        ))}
+      </section>
 
-      {/* Selected Monitor Chart Section */}
-      {selectedMonitor && (
-        <section className="animate-fade-in">
-          <LatencyChart data={metricsData} monitorName={selectedMonitor.name} />
-        </section>
-      )}
+      {selectedMonitor && <LatencyChart data={metricsData} monitorName={selectedMonitor.name} />}
 
-      {/* Monitors Grid Section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-100">Monitored Endpoints</h2>
-            <p className="text-xs text-slate-400">Real-time status probes and latency streams</p>
+            <h2 className="text-sm font-medium text-slate-200">Endpoints</h2>
+            <p className="mt-0.5 text-[11px] text-slate-600">Select a row to inspect its recent latency.</p>
           </div>
-
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md border border-[#2b3038] px-2.5 py-1.5 text-[11px] text-slate-400 transition hover:bg-[#14171c] hover:text-slate-200 disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-indigo-400" : ""}`} />
-            <span>Refresh</span>
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
           </button>
         </div>
 
         {monitors.length === 0 ? (
-          <div className="py-16 text-center border border-dashed border-slate-800 rounded-2xl bg-slate-900/20 space-y-2">
-            <Activity className="w-10 h-10 text-slate-600 mx-auto" />
-            <h3 className="text-sm font-semibold text-slate-300">No Monitored Endpoints Yet</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Add your first API endpoint to begin capturing sub-second latency telemetry and uptime analytics.
-            </p>
+          <div className="border border-dashed border-[#2b3038] bg-[#0d1014] px-6 py-14 text-center">
+            <p className="text-sm text-slate-400">No endpoints are being monitored.</p>
+            <p className="mt-1 text-xs text-slate-600">Create a monitor to start collecting uptime and latency data.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="space-y-2">
+            <div className="hidden grid-cols-[minmax(0,1.7fr)_150px_110px_120px_120px] gap-4 px-4 text-[10px] uppercase tracking-[0.12em] text-slate-600 lg:grid">
+              <span>Endpoint</span>
+              <span>Status</span>
+              <span>Latency</span>
+              <span>Uptime</span>
+              <span className="text-right">Actions</span>
+            </div>
             {monitors.map((monitor) => (
               <MonitorCard
                 key={monitor.id}

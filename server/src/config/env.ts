@@ -10,6 +10,11 @@ const envSchema = z.object({
   DATABASE_URL: z.string().default("postgresql://sentinel:sentinel_secret@localhost:5432/sentinel_db?schema=public"),
   JWT_SECRET: z.string().default("super_secret_jwt_key_replace_in_production_sentinel_xyz123"),
   CORS_ORIGIN: z.string().default("*"),
+  APP_URL: z.string().url().default("http://localhost:5173"),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
   CHECK_CONCURRENCY: z.coerce.number().default(10),
   DEFAULT_TIMEOUT_MS: z.coerce.number().default(5000),
 });

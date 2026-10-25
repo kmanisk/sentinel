@@ -2,37 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-  code, pre {
-    font-family: 'JetBrains Mono', monospace;
-  }
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  background: #090b0e;
 }
 
-/* Custom crisp scrollbar */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #090b0e;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(115, 124, 255, 0.08), transparent 36rem),
+    #090b0e;
+  color: #e7e9ee;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+code,
+pre,
+.font-mono {
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+::selection {
+  background: rgba(126, 136, 255, 0.24);
+  color: #fff;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0B0F17;
-}
-::-webkit-scrollbar-thumb {
-  background: #1F2937;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  width: 8px;
+  height: 8px;
 }
 
-/* Pulse animation for real-time live updates */
-@keyframes livePulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.95); }
+::-webkit-scrollbar-track {
+  background: #090b0e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2e37;
+  border: 2px solid #090b0e;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3f4a;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 160ms ease-out;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.42; }
 }
 
 .animate-live-pulse {
-  animation: livePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+/* Keep legacy modal surfaces from drifting back toward oversized AI-style cards. */
+.rounded-2xl {
+  border-radius: 10px !important;
+}
+
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32) !important;
 }

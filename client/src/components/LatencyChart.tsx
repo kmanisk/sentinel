@@ -1,12 +1,12 @@
 import React from "react";
 import {
-  AreaChart,
-  Area,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
 } from "recharts";
 import { Heartbeat } from "../types";
 
@@ -21,126 +21,119 @@ interface CustomTooltipProps {
     value: number;
     payload: Heartbeat;
   }>;
-  label?: string;
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    const item = payload[0].payload;
-    return (
-      <div className="bg-[#111827] border border-slate-700/80 rounded-lg p-3 shadow-xl backdrop-blur-md text-xs space-y-1.5 min-w-[160px]">
-        <div className="flex items-center justify-between font-mono text-slate-400">
-          <span>{new Date(item.createdAt).toLocaleTimeString()}</span>
-          <span className={item.status === "UP" ? "text-emerald-400" : "text-rose-400 font-semibold"}>
-            {item.status}
-          </span>
-        </div>
-        <div className="border-t border-slate-800 pt-1.5 space-y-1">
-          <div className="flex justify-between">
-            <span className="text-slate-400">Total Latency:</span>
-            <span className="font-mono font-semibold text-indigo-400">{item.latency} ms</span>
-          </div>
-          {item.ttfb !== undefined && (
-            <div className="flex justify-between text-slate-500">
-              <span>TTFB:</span>
-              <span className="font-mono">{item.ttfb} ms</span>
-            </div>
-          )}
-          {item.dnsTime !== undefined && (
-            <div className="flex justify-between text-slate-500">
-              <span>DNS Lookup:</span>
-              <span className="font-mono">{item.dnsTime} ms</span>
-            </div>
-          )}
-          {item.statusCode && (
-            <div className="flex justify-between text-slate-500">
-              <span>HTTP Status:</span>
-              <span className="font-mono">{item.statusCode}</span>
-            </div>
-          )}
-          {item.error && (
-            <div className="text-rose-400 text-[11px] pt-1 border-t border-slate-800">
-              {item.error}
-            </div>
-          )}
-        </div>
+  if (!active || !payload?.length) return null;
+  const item = payload[0].payload;
+
+  return (
+    <div className="min-w-[170px] border border-[#343943] bg-[#0c0f13] p-3 text-xs shadow-2xl">
+      <div className="mb-2 flex items-center justify-between gap-4 border-b border-[#242830] pb-2">
+        <span className="font-mono text-slate-500">{new Date(item.createdAt).toLocaleTimeString()}</span>
+        <span className={item.status === "UP" ? "text-emerald-400" : "text-rose-400"}>{item.status}</span>
       </div>
-    );
-  }
-  return null;
+      <dl className="space-y-1.5">
+        <div className="flex justify-between gap-4">
+          <dt className="text-slate-500">Latency</dt>
+          <dd className="font-mono text-slate-200">{item.latency} ms</dd>
+        </div>
+        {item.ttfb !== undefined && item.ttfb !== null && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">TTFB</dt>
+            <dd className="font-mono text-slate-300">{item.ttfb} ms</dd>
+          </div>
+        )}
+        {item.dnsTime !== undefined && item.dnsTime !== null && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">DNS</dt>
+            <dd className="font-mono text-slate-300">{item.dnsTime} ms</dd>
+          </div>
+        )}
+        {item.statusCode && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-slate-500">HTTP</dt>
+            <dd className="font-mono text-slate-300">{item.statusCode}</dd>
+          </div>
+        )}
+      </dl>
+      {item.error && <p className="mt-2 border-t border-[#242830] pt-2 text-rose-400">{item.error}</p>}
+    </div>
+  );
 };
 
 export const LatencyChart: React.FC<LatencyChartProps> = ({ data, monitorName }) => {
-  if (!data || data.length === 0) {
+  if (!data?.length) {
     return (
-      <div className="h-64 flex flex-col items-center justify-center text-slate-500 border border-slate-800/80 rounded-xl bg-slate-900/40">
-        <p className="text-sm">No telemetry records available yet.</p>
-        <p className="text-xs text-slate-600 mt-1">Metrics will stream here automatically.</p>
+      <div className="flex h-64 items-center justify-center border border-[#242830] bg-[#0d1014] text-sm text-slate-600">
+        Waiting for telemetry from {monitorName}.
       </div>
     );
   }
 
-  const chartData = data.map((d) => ({
-    ...d,
-    timeLabel: new Date(d.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-  }));
+  const chartData = [...data]
+    .reverse()
+    .map((d) => ({
+      ...d,
+      timeLabel: new Date(d.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
 
   const latencies = data.map((d) => d.latency);
   const avgLatency = Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length);
-  const maxLatency = Math.max(...latencies, 100);
+  const maxLatency = Math.max(...latencies);
 
   return (
-    <div className="border border-slate-800/80 rounded-xl bg-slate-900/40 p-4 space-y-3">
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="border border-[#242830] bg-[#0d1014]">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#242830] px-4 py-3">
         <div>
-          <h4 className="text-sm font-semibold text-slate-200">{monitorName} — Latency Telemetry</h4>
-          <p className="text-xs text-slate-500">Response time stream over recent health checks</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-slate-600">Latency history</p>
+          <h2 className="mt-1 text-sm font-medium text-slate-100">{monitorName}</h2>
         </div>
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <span className="text-slate-400">
-            Avg: <span className="text-emerald-400 font-semibold">{avgLatency}ms</span>
-          </span>
-          <span className="text-slate-400">
-            Peak: <span className="text-indigo-400 font-semibold">{maxLatency}ms</span>
-          </span>
+        <div className="flex gap-6 text-xs">
+          <div>
+            <div className="text-[10px] text-slate-600">Average</div>
+            <div className="mt-0.5 font-mono text-slate-300">{avgLatency} ms</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-slate-600">Peak</div>
+            <div className="mt-0.5 font-mono text-slate-300">{maxLatency} ms</div>
+          </div>
         </div>
       </div>
 
-      <div className="h-56 w-full pt-2">
+      <div className="h-64 w-full px-2 pb-3 pt-4">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="latencyGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+          <LineChart data={chartData} margin={{ top: 4, right: 12, left: -18, bottom: 0 }}>
+            <CartesianGrid stroke="#20242b" strokeDasharray="2 6" vertical={false} />
             <XAxis
               dataKey="timeLabel"
-              stroke="#64748b"
+              stroke="#555c68"
               fontSize={10}
               tickLine={false}
-              axisLine={{ stroke: "#1f2937" }}
+              axisLine={false}
+              minTickGap={28}
             />
             <YAxis
-              stroke="#64748b"
+              stroke="#555c68"
               fontSize={10}
               tickLine={false}
-              axisLine={{ stroke: "#1f2937" }}
+              axisLine={false}
               unit="ms"
             />
-            <Tooltip content={<CustomTooltip />} />
-            <Area
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#353b46", strokeDasharray: "3 3" }} />
+            <Line
               type="monotone"
               dataKey="latency"
-              stroke="#818cf8"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#latencyGradient)"
+              stroke="#8b93ff"
+              strokeWidth={1.75}
+              dot={false}
+              activeDot={{ r: 3, fill: "#c7cbff", stroke: "#8b93ff", strokeWidth: 1 }}
               isAnimationActive={false}
             />
-          </AreaChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
