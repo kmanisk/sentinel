@@ -4,12 +4,13 @@
 
 **Real-time API uptime, latency, incident, and alert monitoring.**
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Fastify](https://img.shields.io/badge/Fastify-Node.js-000000?logo=fastify&logoColor=white)](https://fastify.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Fastify](https://img.shields.io/badge/Fastify-Node.js-000000?style=flat-square&logo=fastify&logoColor=white)](https://fastify.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Stars](https://img.shields.io/github/stars/kmanisk/sentinel?style=flat-square)](https://github.com/kmanisk/sentinel/stargazers)
+[![License](https://img.shields.io/github/license/kmanisk/sentinel?style=flat-square)](LICENSE)
 
 **[Live Demo](https://sentinel-lyfx.onrender.com)** · [Health](https://sentinel-lyfx.onrender.com/health) · [Report Bug](https://github.com/kmanisk/sentinel/issues) · [Request Feature](https://github.com/kmanisk/sentinel/issues) · [Contributing](CONTRIBUTING.md)
 
