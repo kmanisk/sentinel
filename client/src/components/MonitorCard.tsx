@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Edit2, ExternalLink, Play, Trash2 } from "lucide-react";
+import { Edit2, ExternalLink, LoaderCircle, Play, Trash2 } from "lucide-react";
 import { Monitor } from "../types";
 import { StatusBadge } from "./StatusBadge";
 import { UptimeBar } from "./UptimeBar";
 import { ApiClient } from "../services/api";
+import { ToastTone } from "./Toast";
 
 interface MonitorCardProps {
   monitor: Monitor;
@@ -11,6 +12,7 @@ interface MonitorCardProps {
   onSelect: (monitor: Monitor) => void;
   onEdit: (monitor: Monitor) => void;
   onDelete: (id: string) => void;
+  onNotify: (title: string, tone: ToastTone, detail?: string) => void;
 }
 
 const latencyClass = (latency?: number | null) => {
@@ -26,6 +28,7 @@ export const MonitorCard: React.FC<MonitorCardProps> = ({
   onSelect,
   onEdit,
   onDelete,
+  onNotify,
 }) => {
   const [isTesting, setIsTesting] = useState(false);
 
@@ -33,9 +36,19 @@ export const MonitorCard: React.FC<MonitorCardProps> = ({
     e.stopPropagation();
     try {
       setIsTesting(true);
-      await ApiClient.triggerCheck(monitor.id);
-    } catch (err) {
+      const { result } = await ApiClient.triggerCheck(monitor.id);
+      const tone: ToastTone =
+        result.status === "DOWN" ? "error" : result.status === "DEGRADED" ? "warning" : "success";
+
+      onNotify(
+        `${monitor.name} checked`,
+        tone,
+        `${result.status.toLowerCase()} · ${result.latency} ms`
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "The check could not be completed.";
       console.error("Test check failed:", err);
+      onNotify("Check failed", "error", message);
     } finally {
       setIsTesting(false);
     }
@@ -99,15 +112,22 @@ export const MonitorCard: React.FC<MonitorCardProps> = ({
 
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
+            type="button"
             onClick={handleTestNow}
             disabled={isTesting}
-            title="Run check now"
+            title={isTesting ? "Running check" : "Run check now"}
             className="sentinel-icon-key"
             aria-label={`Run ${monitor.name} check now`}
+            aria-busy={isTesting}
           >
-            <Play className={`h-3.5 w-3.5 ${isTesting ? "animate-pulse" : ""}`} />
+            {isTesting ? (
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Play className="h-3.5 w-3.5" />
+            )}
           </button>
           <button
+            type="button"
             onClick={() => onEdit(monitor)}
             title="Edit monitor"
             className="sentinel-icon-key"
@@ -116,6 +136,7 @@ export const MonitorCard: React.FC<MonitorCardProps> = ({
             <Edit2 className="h-3.5 w-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => onDelete(monitor.id)}
             title="Delete monitor"
             className="sentinel-icon-key hover:!border-[var(--danger)] hover:!bg-[var(--danger-soft)] hover:!text-[var(--danger)]"

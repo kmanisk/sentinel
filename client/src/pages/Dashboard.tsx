@@ -5,6 +5,7 @@ import { MonitorCard } from "../components/MonitorCard";
 import { LatencyChart } from "../components/LatencyChart";
 import { StatusBadge } from "../components/StatusBadge";
 import { ApiClient } from "../services/api";
+import { ToastTone } from "../components/Toast";
 
 interface DashboardProps {
   monitors: Monitor[];
@@ -14,6 +15,7 @@ interface DashboardProps {
   onDeleteMonitor: (id: string) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onNotify: (title: string, tone: ToastTone, detail?: string) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -24,6 +26,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onDeleteMonitor,
   onRefresh,
   isRefreshing,
+  onNotify,
 }) => {
   const [metricsData, setMetricsData] = useState<Heartbeat[]>([]);
 
@@ -173,12 +176,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <h2 className="mt-1 text-lg font-semibold tracking-[-0.02em]">Monitored endpoints</h2>
           </div>
           <button
+            type="button"
             onClick={onRefresh}
             disabled={isRefreshing}
             className="sentinel-key h-8 px-2.5 text-[11px] font-semibold"
+            aria-busy={isRefreshing}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            Refresh
+            {isRefreshing ? "Refreshing" : "Refresh"}
           </button>
         </div>
 
@@ -210,6 +215,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 onSelect={onSelectMonitor}
                 onEdit={onEditMonitor}
                 onDelete={onDeleteMonitor}
+                onNotify={onNotify}
               />
             ))}
           </div>

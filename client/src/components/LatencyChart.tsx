@@ -29,7 +29,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   const item = payload[0].payload;
 
   return (
-    <div className="min-w-[170px] border border-[var(--ink)] bg-[#fffef9] p-3 text-xs shadow-[0_3px_0_var(--ink)]">
+    <div className="min-w-[170px] border border-[var(--ink)] bg-[var(--paper-raised)] p-3 text-xs shadow-[var(--tooltip-shadow)]">
       <div className="mb-2 flex items-center justify-between gap-4 border-b border-[var(--line)] pb-2">
         <span className="font-mono text-[var(--muted)]">{new Date(item.createdAt).toLocaleTimeString()}</span>
         <span className={item.status === "UP" ? "text-[var(--signal-dark)]" : "text-[var(--danger)]"}>

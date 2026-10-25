@@ -9,6 +9,9 @@
   --paper: #f5f2ea;
   --paper-raised: #fbfaf6;
   --paper-muted: #eee9dd;
+  --field: #fffef9;
+  --hover: #fbf8ef;
+  --key-hover: #fffef9;
   --ink: #171714;
   --ink-soft: #383832;
   --muted: #6f6d65;
@@ -16,6 +19,8 @@
   --line: #d8d2c5;
   --line-strong: #b7b0a2;
   --grid-line: #e2ddd2;
+  --header: rgba(245, 242, 234, 0.96);
+  --backdrop: rgba(23, 23, 20, 0.35);
 
   --signal: #1b8773;
   --signal-dark: #0c5f50;
@@ -27,8 +32,53 @@
   --danger-soft: #f7e6e3;
 
   --focus: #1f5f8c;
+  --selection: #cfe8e1;
+  --scrollbar-thumb: #c2bbae;
+  --scrollbar-thumb-hover: #a8a194;
+
   --key-shadow: 0 2px 0 var(--ink);
   --key-shadow-signal: 0 2px 0 var(--signal-dark);
+  --tooltip-shadow: 0 3px 0 var(--ink);
+  --modal-shadow: 0 8px 0 rgba(23, 23, 20, 0.14);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #141511;
+  --paper-raised: #1b1c17;
+  --paper-muted: #23241e;
+  --field: #11120f;
+  --hover: #20211b;
+  --key-hover: #25261f;
+  --ink: #f1ede4;
+  --ink-soft: #d8d3ca;
+  --muted: #aaa59a;
+  --faint: #747168;
+  --line: #34352e;
+  --line-strong: #4c4d44;
+  --grid-line: #292a25;
+  --header: rgba(20, 21, 17, 0.96);
+  --backdrop: rgba(0, 0, 0, 0.62);
+
+  --signal: #4aae96;
+  --signal-dark: #78cdb9;
+  --signal-soft: #19342e;
+
+  --warning: #d49a4f;
+  --warning-soft: #3a2b19;
+  --danger: #e16d63;
+  --danger-soft: #3b211f;
+
+  --focus: #82b9dc;
+  --selection: #29483f;
+  --scrollbar-thumb: #46483f;
+  --scrollbar-thumb-hover: #5b5d53;
+
+  --key-shadow: 0 2px 0 #050605;
+  --key-shadow-signal: 0 2px 0 #0c5a4d;
+  --tooltip-shadow: 0 3px 0 #050605;
+  --modal-shadow: 0 8px 0 rgba(0, 0, 0, 0.38);
 }
 
 * {
@@ -47,6 +97,9 @@ body {
   font-family: "Inter Tight", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition:
+    background-color 180ms ease-out,
+    color 180ms ease-out;
 }
 
 button,
@@ -68,7 +121,7 @@ pre,
 }
 
 ::selection {
-  background: #cfe8e1;
+  background: var(--selection);
   color: var(--ink);
 }
 
@@ -82,13 +135,25 @@ pre,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c2bbae;
+  background: var(--scrollbar-thumb);
   border: 2px solid var(--paper);
   border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a194;
+  background: var(--scrollbar-thumb-hover);
+}
+
+.sentinel-sheet,
+.sentinel-row,
+.sentinel-field,
+.sentinel-key,
+.sentinel-icon-key {
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    color 180ms ease-out,
+    box-shadow 180ms ease-out;
 }
 
 .sentinel-sheet {
@@ -128,7 +193,7 @@ pre,
 }
 
 .sentinel-key:hover:not(:disabled) {
-  background: #fffef9;
+  background: var(--key-hover);
   transform: translateY(-1px);
   box-shadow: 0 3px 0 var(--ink);
 }
@@ -146,7 +211,8 @@ pre,
   outline-offset: 3px;
 }
 
-.sentinel-key:disabled {
+.sentinel-key:disabled,
+.sentinel-icon-key:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -158,8 +224,12 @@ pre,
   box-shadow: var(--key-shadow-signal);
 }
 
+:root[data-theme="dark"] .sentinel-key-primary {
+  color: #07110e;
+}
+
 .sentinel-key-primary:hover:not(:disabled) {
-  background: #168f78;
+  filter: brightness(1.06);
   box-shadow: 0 3px 0 var(--signal-dark);
 }
 
@@ -179,13 +249,13 @@ pre,
     transform 90ms ease-out;
 }
 
-.sentinel-icon-key:hover {
+.sentinel-icon-key:hover:not(:disabled) {
   border-color: var(--line-strong);
   background: var(--paper-muted);
   color: var(--ink);
 }
 
-.sentinel-icon-key:active {
+.sentinel-icon-key:active:not(:disabled) {
   transform: translateY(1px);
 }
 
@@ -193,7 +263,7 @@ pre,
   width: 100%;
   border: 1px solid var(--line-strong);
   border-radius: 5px;
-  background: #fffef9;
+  background: var(--field);
   color: var(--ink);
   outline: none;
   transition:
@@ -209,7 +279,7 @@ pre,
 .sentinel-field:focus {
   border-color: var(--ink);
   box-shadow: inset 0 -2px 0 var(--ink);
-  background: #ffffff;
+  background: var(--paper-raised);
 }
 
 .sentinel-row {
@@ -222,7 +292,7 @@ pre,
 }
 
 .sentinel-row:hover {
-  background: #fbf8ef;
+  background: var(--hover);
 }
 
 .sentinel-row[data-selected="true"] {
@@ -239,16 +309,14 @@ pre,
 }
 
 .sentinel-modal-backdrop {
+  background: var(--backdrop) !important;
   animation: backdrop-in 180ms ease-out both;
 }
 
 .sentinel-modal-sheet {
+  box-shadow: var(--modal-shadow) !important;
   transform-origin: 50% 42%;
   animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.sentinel-live-dot {
-  animation: live-breathe 2.4s ease-in-out infinite;
 }
 
 .chart-grid {
@@ -269,6 +337,52 @@ pre,
 
 .section-reveal-delay-2 {
   animation-delay: 130ms;
+}
+
+.sentinel-toast {
+  --toast-accent: var(--focus);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  background: var(--paper-raised);
+  color: var(--ink);
+  padding: 0.75rem 0.75rem 0.75rem 0.875rem;
+  box-shadow: var(--key-shadow);
+  animation: toast-in 190ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.sentinel-toast[data-tone="success"] {
+  --toast-accent: var(--signal);
+}
+
+.sentinel-toast[data-tone="warning"] {
+  --toast-accent: var(--warning);
+}
+
+.sentinel-toast[data-tone="error"] {
+  --toast-accent: var(--danger);
+}
+
+.sentinel-toast::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--toast-accent);
+}
+
+.sentinel-toast::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--toast-accent);
+  transform-origin: left;
+  animation: toast-life 3.2s linear forwards;
 }
 
 @keyframes section-reveal {
@@ -309,9 +423,20 @@ pre,
   to { opacity: 1; }
 }
 
-@keyframes live-breathe {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.38; }
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-life {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

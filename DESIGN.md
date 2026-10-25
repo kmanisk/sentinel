@@ -10,7 +10,7 @@ Primary job: scan service state, inspect one endpoint's latency, and act on moni
 
 ## Direction: Signal Ledger
 
-Signal Ledger is a light technical workspace derived from Echo UI's drawn-device grammar and reference research across shipped observability/monitoring products.
+Signal Ledger is a technical monitoring workspace derived from Echo UI's drawn-device grammar and reference research across shipped observability/monitoring products. It has paired light and dark devices; the information hierarchy and interaction model do not change between them.
 
 ### Reference synthesis
 
@@ -26,19 +26,20 @@ These are ingredients, not templates. Sentinel keeps its own pixel mark and moni
 
 ### Palette
 
-| Role | Value |
-| --- | --- |
-| Paper | `#F5F2EA` |
-| Raised paper | `#FBFAF6` |
-| Ink | `#171714` |
-| Secondary ink | `#383832` |
-| Muted | `#6F6D65` |
-| Rule | `#D8D2C5` |
-| Signal / operational | `#1B8773` |
-| Warning | `#A6671D` |
-| Failure | `#B43D34` |
+Light mode is warm paper and black ink. Dark mode is warm graphite rather than blue-black SaaS chrome.
 
-Color never carries state alone. Every state also has a word and a shape.
+| Role | Light | Dark |
+| --- | --- | --- |
+| Workspace | `#F5F2EA` | `#141511` |
+| Raised surface | `#FBFAF6` | `#1B1C17` |
+| Ink | `#171714` | `#F1EDE4` |
+| Muted | `#6F6D65` | `#AAA59A` |
+| Rule | `#D8D2C5` | `#34352E` |
+| Signal / operational | `#1B8773` | `#4AAE96` |
+| Warning | `#A6671D` | `#D49A4F` |
+| Failure | `#B43D34` | `#E16D63` |
+
+Color never carries state alone. Every state also has a word and a shape. Theme changes preserve the same semantic jobs rather than inventing a second visual language.
 
 ### Type
 
@@ -49,19 +50,21 @@ Color never carries state alone. Every state also has a word and a shape.
 
 ### Layout
 
-- One continuous paper workspace rather than a field of cards.
+- One continuous workspace rather than a field of cards.
 - Summary metrics share a ruled strip.
 - One primary latency chart per selected endpoint.
 - The selected endpoint has a narrow inspector beside the chart.
 - Endpoint records are ledger rows with a persistent column rhythm.
 - Modals are interruption sheets, not oversized floating cards.
+- The top bar is deliberately quiet: identity and actions only. System health belongs in the working area.
 
 ### Shape and depth
 
 - Corners stay tight: roughly 4–6px.
 - Most surfaces use hairlines instead of shadows.
 - Tactile buttons stand on a 2px hard edge and physically travel down when pressed.
-- Selected rows use a signal-color edge and a light paper tint, never a glow.
+- Selected rows use a signal-color edge and a subtle surface tint, never a glow.
+- Dark mode keeps hard edges and rules; it does not introduce glass, neon or bloom.
 
 ### Motion
 
@@ -71,7 +74,8 @@ Motion explains state and input:
 - row/select state swaps: ~160–190ms;
 - modal arrival: ~220ms;
 - chart redraw on endpoint change: ~460ms;
-- the live connection mark may breathe subtly;
+- toast arrival: ~190ms with a short lifetime rail;
+- theme changes crossfade semantic surfaces;
 - no animated backgrounds, floating ornaments or continuous chart decoration.
 
 `prefers-reduced-motion` collapses nonessential motion.
@@ -85,7 +89,8 @@ Motion explains state and input:
 - decorative background animation;
 - identical cards for every kind of information;
 - status indicated by color without text;
-- fake telemetry or placeholder statistics.
+- fake telemetry or placeholder statistics;
+- a duplicate global incident/live status in the header when the workspace already shows current state.
 
 ## Interaction rules
 
@@ -93,4 +98,6 @@ Motion explains state and input:
 - Every icon-only control has an accessible name.
 - Rows are keyboard selectable.
 - Destructive actions are named explicitly.
+- Completed or failed actions get concise toast feedback; actions that already open a modal use the modal itself as feedback.
+- Toasts never replace inline form errors.
 - Do not duplicate the same primary action in multiple regions of one screen.
