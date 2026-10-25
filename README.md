@@ -11,7 +11,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Report Bug](https://github.com/kmanisk/sentinel/issues) · [Request Feature](https://github.com/kmanisk/sentinel/issues) · [Contributing](CONTRIBUTING.md)
+**[Live Demo](https://sentinel-lyfx.onrender.com)** · [Health](https://sentinel-lyfx.onrender.com/health) · [Report Bug](https://github.com/kmanisk/sentinel/issues) · [Request Feature](https://github.com/kmanisk/sentinel/issues) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -65,7 +65,7 @@ flowchart LR
 | Database | PostgreSQL, Prisma ORM |
 | Authentication | JWT, `bcryptjs` |
 | Deployment | Docker Compose, Render |
-| Production database | PostgreSQL / Neon-compatible connection |
+| Production database | Neon PostgreSQL |
 
 ## Quick Start
 
@@ -137,11 +137,16 @@ See [`.env.example`](.env.example) for the complete template.
 
 ## Production Deployment
 
-Sentinel supports two deployment paths.
+### Live deployment
 
-### Render + External PostgreSQL
+- **Application:** https://sentinel-lyfx.onrender.com
+- **Health:** https://sentinel-lyfx.onrender.com/health
+- **Web service:** Render Free
+- **Database:** Neon PostgreSQL
 
-The included [`render.yaml`](render.yaml) builds both the React frontend and Fastify backend as one Render web service. Production uses an external `DATABASE_URL`, allowing the database lifecycle to remain independent from the web service.
+### Render + Neon PostgreSQL
+
+The included [`render.yaml`](render.yaml) builds both the React frontend and Fastify backend as one Render web service. Production uses a Neon `DATABASE_URL`, keeping the persistent database lifecycle independent from the Render web service.
 
 Required production environment variables:
 
