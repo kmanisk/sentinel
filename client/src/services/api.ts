@@ -20,9 +20,18 @@ export class ApiClient {
   private static async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.getToken();
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      ...(options.headers as Record<string, string>),
+      ...(options.headers as Record<string, string> | undefined),
     };
+
+    const hasContentType = Object.keys(headers).some(
+      (key) => key.toLowerCase() === "content-type"
+    );
+
+    // Fastify rejects an empty request body when Content-Type is application/json.
+    // Only advertise JSON when this request actually carries a JSON payload.
+    if (typeof options.body === "string" && !hasContentType) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (token) {
       headers.Authorization = `Bearer ${token}`;
