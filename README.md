@@ -1,16 +1,17 @@
 <div align="center">
 
 # Sentinel
-### Production-Grade API Health, Latency & Uptime Telemetry Platform
 
-[![CI](https://github.com/kmanisk/sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/kmanisk/sentinel/actions/workflows/ci.yml)
-[![Docker](https://img.shields.io/badge/Docker-Multi--stage-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![React](https://img.shields.io/badge/React_18-Vite_&_Tailwind-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Fastify](https://img.shields.io/badge/Fastify-High--throughput-000000?logo=fastify&logoColor=white)](https://fastify.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**Real-time API uptime, latency, incident, and alert monitoring.**
 
-**[Live Interactive Demo](https://sentinel-demo.up.railway.app)** · **[Report Bug](https://github.com/kmanisk/sentinel/issues)** · **[Request Feature](https://github.com/kmanisk/sentinel/issues)**
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Fastify](https://img.shields.io/badge/Fastify-Node.js-000000?logo=fastify&logoColor=white)](https://fastify.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[Report Bug](https://github.com/kmanisk/sentinel/issues) · [Request Feature](https://github.com/kmanisk/sentinel/issues) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -18,241 +19,213 @@
 
 ## Overview
 
-**Sentinel** is an enterprise-grade, real-time API health, latency, and uptime monitoring system. Engineered for high-throughput observability, it combines asynchronous precision network probes, live WebSocket telemetry streaming, rolling SLA calculations, anti-flap incident tracking, and automated multi-channel webhook alerting.
+**Sentinel** is a self-hosted monitoring platform for tracking API and website availability in real time. It performs scheduled health checks, records response latency, tracks outages and recoveries, streams updates to the dashboard over WebSockets, and sends alerts when monitored services change state.
 
-Designed from day one with **DevOps discipline**, Sentinel features fully containerized multi-stage Docker builds, Nginx reverse proxy routing with WebSocket upgrades and TLS termination, and automated GitHub Actions CI/CD pipelines testing against a live PostgreSQL service container.
+The project combines a React dashboard with a Fastify/TypeScript backend, Prisma, PostgreSQL, JWT authentication, WebSockets, and Docker-based deployment.
 
----
+## Features
 
-## System Architecture
+- **Scheduled uptime checks** with configurable intervals, timeouts, HTTP methods, and expected status codes.
+- **Latency history and uptime metrics** displayed through responsive Recharts visualizations.
+- **Real-time dashboard updates** over WebSockets without manual refreshes.
+- **Incident tracking** for service downtime, recovery, and outage duration.
+- **Manual health checks** for immediate endpoint verification.
+- **Alert integrations** for Discord, Slack, Telegram, and generic webhooks.
+- **JWT authentication** with hashed passwords and protected API routes.
+- **Docker Compose deployment** for local or self-hosted environments.
+- **Render deployment configuration** with an external PostgreSQL database.
+
+## Architecture
 
 ```mermaid
-flowchart TD
-    subgraph Client ["Frontend (React 18 + Vite + Tailwind + Recharts)"]
-        UI["Live Dashboard & Latency Area Charts"]
-        WSClient["WebSocket Client (Auto-reconnect & Jitter Backoff)"]
-        AuthCtx["JWT Session State & Role-Based Access"]
-    end
+flowchart LR
+    Browser[React Dashboard] -->|REST /api| API[Fastify API]
+    Browser <-->|WebSocket /ws| WS[WebSocket Server]
 
-    subgraph ReverseProxy ["Edge & Reverse Proxy"]
-        Edge["Caddy / Nginx (Automated Let's Encrypt / ZeroSSL TLS + HTTP/WS Reverse Proxy)"]
-    end
+    API --> Auth[JWT Authentication]
+    API --> Prisma[Prisma ORM]
+    WS --> Browser
 
-    subgraph Server ["Backend (Node.js + Fastify + TypeScript)"]
-        Router["REST API Router (Fastify)"]
-        AuthSvc["Auth Service (JWT + Bcrypt)"]
-        WSServer["WebSocket Telemetry Streamer (@fastify/websocket)"]
-        PingerWorker["Async Health Checker Engine (Worker Loop)"]
-        AlertEngine["Alert Dispatcher (Discord/Slack/Telegram Webhooks)"]
-    end
+    Scheduler[Monitoring Scheduler] --> Targets[Monitored APIs / Websites]
+    Scheduler --> Prisma
+    Scheduler --> WS
+    Scheduler --> Alerts[Discord / Slack / Telegram / Webhooks]
 
-    subgraph Storage ["Database"]
-        PG[("PostgreSQL 16 (Timeseries Metrics & Configs)")]
-        Prisma["Prisma ORM (Strict Schemas & Cascading Migrations)"]
-    end
-
-    subgraph ExternalTargets ["Monitored Infrastructure"]
-        Target1["Payment API (Stripe)"]
-        Target2["Cloudflare DoH 1.1.1.1"]
-        TargetN["External Microservices"]
-    end
-
-    Client -->|HTTPS / WSS| Edge
-    Edge -->|/api/*| Router
-    Edge -->|/ws| WSServer
-    Router --> AuthSvc
-    Router --> Prisma
-    Prisma --> PG
-    PingerWorker -->|Scheduled Concurrent Probes| ExternalTargets
-    PingerWorker -->|Record Latency & Status| Prisma
-    PingerWorker -->|Broadcast Live Heartbeat| WSServer
-    PingerWorker -->|State Transition: UP ⇄ DOWN| AlertEngine
-    WSServer -->|Push Delta Packet| WSClient
-    WSClient --> UI
+    Prisma --> DB[(PostgreSQL)]
 ```
 
----
+## Tech Stack
 
-## Key Features & Engineering Highlights
+| Layer | Technology |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| Charts | Recharts |
+| Backend | Node.js, Fastify, TypeScript |
+| Real-time | `@fastify/websocket`, `ws` |
+| Database | PostgreSQL, Prisma ORM |
+| Authentication | JWT, `bcryptjs` |
+| Deployment | Docker Compose, Render |
+| Production database | PostgreSQL / Neon-compatible connection |
 
-- **Precision Async Network Probing**: Measures granular network timings (DNS resolution time, Time to First Byte [TTFB], and end-to-end response latency) with strict timeout abortion (`AbortController`).
-- **Real-Time Streaming Telemetry**: Zero-refresh dashboard powered by native WebSockets with exponential backoff auto-reconnect and heartbeat keepalive frames.
-- **Interactive Time-Series Visualizations**: High-performance SVG latency area charts and rolling 24h availability sparklines built with Recharts.
-- **Anti-Flap Incident Management**: Tracks outages with state transition debouncing, recording exact incident start times, recovery times, and duration in seconds.
-- **Multi-Channel Alert Dispatcher**: Immediate notifications via **Discord Webhooks** (rich embed formatting), **Slack Webhooks**, **Telegram Bots**, and custom HTTP webhooks.
-- **Zero-Trust Auth & Role Model**: JSON Web Tokens (JWT) signed with HMAC-SHA256 and salt-hashed passwords via `bcryptjs`.
-- **Production Containerization**: Multi-stage lean Dockerfiles for both client and server, stripping build dependencies for minimal image footprints.
-- **Full CI/CD Automation**: GitHub Actions running automated type checking, database schema pushes to transient PostgreSQL containers, Vite production bundling, and container layer validation.
+## Quick Start
 
----
-
-## Technology Stack
-
-| Domain | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS | High-performance SPA with modern dark-mode UI |
-| **Data Viz** | Recharts, Lucide Icons | Responsive SVG charts and crisp SVG icons |
-| **Backend** | Node.js 20, Fastify, TypeScript | Low-overhead, high-throughput asynchronous HTTP engine |
-| **Real-time** | `@fastify/websocket`, `ws` | Bidirectional real-time event streaming |
-| **Database & ORM** | PostgreSQL 16, Prisma ORM | Relational consistency with type-safe schema queries |
-| **Authentication** | `@fastify/jwt`, `bcryptjs` | Stateless JWT session authorization |
-| **Webhooks** | Discord, Slack, Telegram APIs | Automated incident dispatching |
-| **Reverse Proxy** | Nginx Alpine, Let's Encrypt Certbot | SSL termination, WebSocket proxying, security headers |
-| **Containers** | Docker, Docker Compose | Reproducible environments & isolated container networks |
-| **CI / CD** | GitHub Actions, GHCR | Automated lint, test, container build, and deployment |
-
----
-
-## Quickstart & Local Setup
-
-### Option A: 1-Command Docker Compose (Recommended)
-
-Run the entire stack (PostgreSQL, Fastify API, React SPA, and Nginx) in isolated containers:
+### Docker Compose
 
 ```bash
-# Clone the repository
 git clone https://github.com/kmanisk/sentinel.git
 cd sentinel
-
-# Copy environment variables
 cp .env.example .env
-
-# Spin up the complete stack
 docker compose up -d --build
 ```
 
-- **Web Dashboard:** [http://localhost](http://localhost)
-- **API Health Check:** [http://localhost/health](http://localhost/health)
-- **Default Demo Credentials:** `admin@sentinel.dev` / `sentinel123`
+Then open:
 
----
+- Dashboard: `http://localhost`
+- Health check: `http://localhost/health`
 
-### Option B: Local Development Workflow
+Demo credentials after seeding:
 
-#### 1. Backend Setup
+```text
+Email:    admin@sentinel.dev
+Password: sentinel123
+```
+
+> Change the demo credentials and `JWT_SECRET` before exposing an instance publicly.
+
+## Local Development
+
+### Backend
 
 ```bash
 cd server
-
-# Install dependencies
 npm install
-
-# Set up local environment
 cp ../.env.example .env
-
-# Generate Prisma client and migrate database
 npx prisma generate
 npx prisma db push
-
-# Seed sample monitors and admin user
 npx tsx prisma/seed.ts
-
-# Start development server with live reload
 npm run dev
 ```
-*Server boots on `http://localhost:4000` with WebSocket endpoint at `ws://localhost:4000/ws`.*
 
-#### 2. Frontend Setup
+The backend runs on `http://localhost:4000` and exposes WebSockets at `ws://localhost:4000/ws`.
+
+### Frontend
 
 ```bash
 cd client
-
-# Install dependencies
 npm install
-
-# Start Vite dev server with proxy to backend
 npm run dev
 ```
-*Frontend runs on `http://localhost:3000`.*
 
----
+The Vite development server proxies `/api` and `/ws` to the backend.
 
-## Production Deployment (VPS + DuckDNS + Caddy)
+## Environment Variables
 
-Sentinel includes an automated zero-config production stack featuring **Caddy** (automatic TLS / Let's Encrypt certificates + HTTP/3) and an automated daily database backup service.
+| Variable | Purpose |
+| --- | --- |
+| `NODE_ENV` | Runtime environment |
+| `PORT` | Fastify server port |
+| `HOST` | Server bind address |
+| `DATABASE_URL` | PostgreSQL connection string used by Prisma |
+| `JWT_SECRET` | Secret used to sign authentication tokens |
+| `POSTGRES_USER` | Docker Compose PostgreSQL user |
+| `POSTGRES_PASSWORD` | Docker Compose PostgreSQL password |
+| `POSTGRES_DB` | Docker Compose PostgreSQL database |
+| `DOMAIN_NAME` | Production domain for the self-hosted stack |
+| `ACME_EMAIL` | Email used for automatic TLS certificates |
 
-### 1. Free Subdomain via DuckDNS (30 seconds)
-1. Go to [duckdns.org](https://www.duckdns.org) and log in with GitHub.
-2. Create a free subdomain (e.g., `sentinel-mon.duckdns.org`).
-3. Set the IP address to your VPS public IPv4 address.
+See [`.env.example`](.env.example) for the complete template.
 
-### 2. Launch on Oracle Cloud (ARM64 Ampere or x86 VPS)
-```bash
-# Clone on your VPS
-git clone https://github.com/kmanisk/sentinel.git /opt/sentinel
-cd /opt/sentinel
+## Production Deployment
 
-# Configure domain and secrets
-cp .env.example .env
-nano .env
-# Set DOMAIN_NAME=sentinel-mon.duckdns.org
-# Set ACME_EMAIL=your-email@example.com
+Sentinel supports two deployment paths.
 
-# Deploy production stack (Postgres + Server + Client + Caddy + DB Backup)
-docker compose -f docker-compose.prod.yml up -d
+### Render + External PostgreSQL
+
+The included [`render.yaml`](render.yaml) builds both the React frontend and Fastify backend as one Render web service. Production uses an external `DATABASE_URL`, allowing the database lifecycle to remain independent from the web service.
+
+Required production environment variables:
+
+```text
+DATABASE_URL=postgresql://...
+JWT_SECRET=<strong-random-secret>
+NODE_ENV=production
+HOST=0.0.0.0
 ```
-Caddy will automatically provision and install SSL certificates for your DuckDNS domain without requiring certbot sidecars or renewal crons.
 
----
+### Docker / VPS
 
-## Automated Database Backups & Disaster Recovery
+For a self-hosted deployment:
 
-Because free cloud tiers can occasionally experience service changes, Sentinel includes automated backup mechanisms to make migrations effortless:
+```bash
+cp .env.example .env
+# Configure production values in .env
 
-- **Automated Daily Backups:** The `db_backup` service in `docker-compose.prod.yml` dumps and gzips the database every night into `./backups` with a rolling 7-day retention policy.
-- **Manual Instant Backup:**
-  ```bash
-  ./scripts/backup-db.sh
-  ```
-- **1-Command Restore / Disaster Recovery:**
-  ```bash
-  ./scripts/restore-db.sh ./backups/sentinel_backup_20261016_231000.sql.gz
-  ```
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
----
+The production Compose configuration includes the application stack and database backup tooling.
 
-## Multi-Architecture Docker Pipeline
+## API
 
-Sentinel builds multi-architecture images for both **`linux/amd64`** (standard x86 VPS) and **`linux/arm64`** (Oracle Cloud Ampere A1).
+### Service
 
-Cross-compilation is handled automatically via GitHub Actions with QEMU and Docker Buildx, outputting OCI-compliant multi-arch manifests directly to GHCR.
-
-## API Reference
-
-### Health & Telemetry
-- `GET /health` — Service liveness probe.
-- `GET /metrics` — High-level telemetry (monitor counts, total checks, active WS clients, memory RSS).
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Service health check |
+| `GET` | `/metrics` | Application-level telemetry |
 
 ### Authentication
-- `POST /api/auth/register` — Create user account (`{ email, password, name }`).
-- `POST /api/auth/login` — Authenticate and receive JWT token (`{ email, password }`).
-- `GET /api/auth/me` — Retrieve active user session profile (requires Bearer token).
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Create an account |
+| `POST` | `/api/auth/login` | Authenticate and receive a JWT |
+| `GET` | `/api/auth/me` | Return the authenticated user |
 
 ### Monitors
-- `GET /api/monitors` — List all monitored endpoints with recent sparkline heartbeats and 24h uptime.
-- `POST /api/monitors` — Register new monitor (`{ name, url, method, interval, timeout, expectedStatus }`).
-- `GET /api/monitors/:id` — Get detailed monitor stats and open/closed incidents.
-- `PUT /api/monitors/:id` — Update monitor settings and reconfigure scheduler.
-- `DELETE /api/monitors/:id` — Delete monitor and cancel active polling timer.
-- `POST /api/monitors/:id/check` — Trigger immediate on-demand health check.
-- `GET /api/monitors/:id/metrics?limit=60` — Fetch chronological time-series latency records for Recharts.
 
-### Alerting & Webhooks
-- `GET /api/alerts` — List configured notification channels.
-- `POST /api/alerts` — Register alert destination (`{ type: "DISCORD"|"SLACK"|"TELEGRAM"|"WEBHOOK", destination }`).
-- `DELETE /api/alerts/:id` — Remove alert destination.
-- `POST /api/alerts/:id/test` — Trigger test alert payload.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/monitors` | List monitors and recent status data |
+| `POST` | `/api/monitors` | Create a monitor |
+| `GET` | `/api/monitors/:id` | Get monitor details and incidents |
+| `PUT` | `/api/monitors/:id` | Update monitor configuration |
+| `DELETE` | `/api/monitors/:id` | Delete a monitor |
+| `POST` | `/api/monitors/:id/check` | Run an immediate check |
+| `GET` | `/api/monitors/:id/metrics` | Retrieve latency history |
 
----
+### Alerts
 
-## Security Best Practices
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/alerts` | List alert channels |
+| `POST` | `/api/alerts` | Create an alert channel |
+| `DELETE` | `/api/alerts/:id` | Delete an alert channel |
+| `POST` | `/api/alerts/:id/test` | Send a test notification |
 
-- **Strict CORS & CSP Headers**: Configured across Nginx and Fastify with frame protection (`SAMEORIGIN`), XSS filtering, and MIME sniffing prevention (`nosniff`).
-- **Non-Root Docker Execution**: Production containers drop root privileges and run under the unprivileged `node` and `nginx` users.
-- **Stateless Secrets**: Zero secrets committed to version control; all database passwords, JWT secrets, and webhook tokens are injected at runtime via environment variables.
+## Project Structure
 
----
+```text
+sentinel/
+├── client/                 # React + Vite dashboard
+├── server/                 # Fastify API, scheduler and WebSocket server
+│   └── prisma/             # Prisma schema and seed data
+├── docker/                 # Reverse-proxy/container configuration
+├── docs/                   # Project documentation
+├── scripts/                # Backup and restore utilities
+├── docker-compose.yml      # Local Docker stack
+├── docker-compose.prod.yml # Production Docker stack
+└── render.yaml             # Render deployment configuration
+```
+
+## Security Notes
+
+- Secrets are supplied through environment variables and are not committed to the repository.
+- Passwords are hashed with `bcryptjs`.
+- Authentication uses signed JWTs.
+- Production containers are configured to avoid unnecessary privileged execution.
+- Use a strong unique `JWT_SECRET` and replace all default development credentials before public deployment.
 
 ## License
 
-This project is open-source under the [MIT License](LICENSE).
+Sentinel is released under the [MIT License](LICENSE).
