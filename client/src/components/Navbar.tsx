@@ -1,5 +1,5 @@
 import React from "react";
-import { Activity, Plus, Bell, LogIn, LogOut, Radio } from "lucide-react";
+import { Plus, Bell, LogIn, LogOut, Radio } from "lucide-react";
 import { User } from "../types";
 
 interface NavbarProps {
@@ -27,8 +27,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand & System Status */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-md shadow-indigo-600/10">
-              <Activity className="w-5 h-5 text-indigo-400" />
+            <div className="h-9 w-9 rounded-lg border border-violet-400/25 bg-[#111522] flex items-center justify-center shadow-md shadow-violet-600/10 overflow-hidden">
+              <img
+                src="/sentinel-icon.svg"
+                alt=""
+                aria-hidden="true"
+                className="h-8 w-8 [image-rendering:pixelated]"
+              />
             </div>
             <div>
               <span className="font-bold text-slate-100 tracking-tight text-lg font-mono">
